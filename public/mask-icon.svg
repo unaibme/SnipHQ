@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="112" fill="#3b82f6"/>
+  <!-- Clipboard back -->
+  <rect x="156" y="160" width="160" height="210" rx="16" fill="white" stroke="#2563eb" stroke-width="16" stroke-linejoin="round"/>
+  <!-- Clipboard front overlap -->
+  <rect x="206" y="200" width="160" height="210" rx="16" fill="white" stroke="#3b82f6" stroke-width="16" stroke-linejoin="round"/>
+  <!-- Lines in document -->
+  <line x1="246" y1="260" x2="326" y2="260" stroke="#93c5fd" stroke-width="16" stroke-linecap="round"/>
+  <line x1="246" y1="310" x2="326" y2="310" stroke="#93c5fd" stroke-width="16" stroke-linecap="round"/>
+  <line x1="246" y1="360" x2="296" y2="360" stroke="#93c5fd" stroke-width="16" stroke-linecap="round"/>
+</svg>
