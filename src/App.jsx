@@ -4,9 +4,7 @@ import {
   Check, 
   Plus, 
   Trash2, 
-  Edit2, 
   Lock, 
-  Unlock, 
   Wifi, 
   WifiOff, 
   Database, 
@@ -26,7 +24,6 @@ const INITIAL_SNIPPETS = [
 
 export default function App() {
   const [snippets, setSnippets] = useState([]);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [toast, setToast] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -141,8 +138,6 @@ export default function App() {
 
   // Copy to Clipboard Action
   const handleCopy = async (snippet) => {
-    if (isEditMode) return; // Prevent copies while editing
-
     try {
       await navigator.clipboard.writeText(snippet.description);
       setCopiedId(snippet.id);
@@ -174,10 +169,8 @@ export default function App() {
     return () => clearTimeout(timer);
   };
 
-  // Delete Action
-  const handleDelete = async (id, e) => {
-    e.stopPropagation(); // Prevent clicks triggering cards
-    
+  // Delete Action (Now called from inside the Edit modal)
+  const handleDelete = async (id) => {
     // Confirm deletion
     if (!confirm('Are you sure you want to delete this snippet?')) return;
 
@@ -186,6 +179,8 @@ export default function App() {
     setSnippets(updated);
     localStorage.setItem('copier_snippets', JSON.stringify(updated));
 
+    // Close Modal immediately
+    setIsModalOpen(false);
     showToast('Snippet deleted');
 
     // Sync deletion to Supabase
@@ -214,9 +209,8 @@ export default function App() {
     setIsModalOpen(true);
   };
 
-  // Open Edit Modal
-  const openEditModal = (snippet, e) => {
-    e.stopPropagation();
+  // Open Edit Modal (via double click)
+  const openEditModal = (snippet) => {
     setEditingSnippet(snippet);
     setFormData({ title: snippet.title, description: snippet.description });
     setIsModalOpen(true);
@@ -313,7 +307,7 @@ export default function App() {
     }
   };
 
-  // Filter snippets based on search input (matching with title)
+  // Filter snippets based on search input (matching EXCLUSIVELY with title)
   const filteredSnippets = snippets.filter((snippet) =>
     snippet.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -360,31 +354,14 @@ export default function App() {
               )}
             </button>
 
-            {/* Mode Switcher */}
-            <button
-              onClick={() => setIsEditMode(!isEditMode)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all border ${
-                isEditMode 
-                  ? 'bg-rose-950/50 border-rose-800 text-rose-300' 
-                  : 'bg-blue-950/40 border-blue-900/50 text-blue-300 hover:bg-blue-900/20'
-              }`}
-            >
-              {isEditMode ? (
-                <>
-                  <Unlock className="w-3.5 h-3.5" />
-                  <span>Edit Mode</span>
-                </>
-              ) : (
-                <>
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Copy Mode</span>
-                </>
-              )}
-            </button>
+            {/* Instruction Badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950/40 text-[10px] md:text-xs text-slate-400 font-semibold uppercase tracking-wider">
+              Double-click card to edit
+            </div>
           </div>
         </header>
 
-        {/* Search Bar section (Titles Search) */}
+        {/* Search Bar section (Strict Titles Search) */}
         <div className="px-5 py-3.5 border-b border-slate-800/60 bg-slate-950/30 flex-shrink-0">
           <div className="relative max-w-lg mx-auto">
             <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
@@ -463,19 +440,9 @@ export default function App() {
               <div>
                 <p className="font-bold text-slate-200">No Snippets Found</p>
                 <p className="text-sm text-slate-400 mt-1 max-w-xs">
-                  {isEditMode 
-                    ? "Click the button below to add your first snippet!" 
-                    : "Switch to Edit Mode to add your fast-copy snippets."}
+                  Click the "+" button in the bottom right corner to add your first snippet!
                 </p>
               </div>
-              {!isEditMode && (
-                <button
-                  onClick={() => setIsEditMode(true)}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm transition-colors"
-                >
-                  Go to Edit Mode
-                </button>
-              )}
             </div>
           ) : filteredSnippets.length === 0 ? (
             /* Empty State: No search results */
@@ -499,11 +466,9 @@ export default function App() {
               {/* Quick Helper Badge */}
               <div className="flex items-center justify-between px-1">
                 <p className="text-xs text-slate-400 font-bold tracking-wider uppercase">
-                  {isEditMode 
-                    ? "EDIT / MANAGE SNIPPETS" 
-                    : searchQuery 
+                  {searchQuery 
                     ? `SEARCH RESULTS FOR "${searchQuery.toUpperCase()}"` 
-                    : "TAP SNIPPET TO COPY"}
+                    : "TAP CARD TO COPY • DOUBLE-TAP TO EDIT"}
                 </p>
                 <p className="text-xs text-slate-500 font-bold font-mono">
                   {filteredSnippets.length} of {snippets.length}
@@ -518,10 +483,9 @@ export default function App() {
                     <div
                       key={snippet.id}
                       onClick={() => handleCopy(snippet)}
+                      onDoubleClick={() => openEditModal(snippet)}
                       className={`relative flex flex-col justify-between p-4 rounded-2xl border text-left transition-all duration-150 group overflow-hidden min-h-[135px] md:min-h-[145px] aspect-auto ${
-                        isEditMode
-                          ? 'bg-slate-850/40 border-slate-800 hover:border-slate-700 cursor-default shadow-sm'
-                          : isCopied
+                        isCopied
                           ? 'bg-blue-600/15 border-blue-500 ring-2 ring-blue-500/30 scale-95 shadow-md'
                           : 'bg-slate-800/60 border-slate-800/80 active:scale-95 hover:bg-slate-800 hover:border-slate-700 md:hover:-translate-y-0.5 lg:hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5 cursor-pointer shadow-sm active:border-blue-500/50'
                       }`}
@@ -538,17 +502,15 @@ export default function App() {
                         <h3 className="font-bold text-[13px] md:text-[14px] tracking-tight text-slate-100 line-clamp-2 leading-snug">
                           {snippet.title}
                         </h3>
-                        {!isEditMode && (
-                          <div className={`flex-shrink-0 transition-all duration-200 ${
-                            isCopied ? 'text-blue-400 scale-110' : 'text-slate-600'
-                          }`}>
-                            {isCopied ? (
-                              <Check className="w-4 h-4 stroke-[3px]" />
-                            ) : (
-                              <Clipboard className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity" />
-                            )}
-                          </div>
-                        )}
+                        <div className={`flex-shrink-0 transition-all duration-200 ${
+                          isCopied ? 'text-blue-400 scale-110' : 'text-slate-600'
+                        }`}>
+                          {isCopied ? (
+                            <Check className="w-4 h-4 stroke-[3px]" />
+                          ) : (
+                            <Clipboard className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </div>
                       </div>
 
                       {/* Card Content (Snippet Preview) */}
@@ -557,26 +519,6 @@ export default function App() {
                           {snippet.description}
                         </p>
                       </div>
-
-                      {/* Overlay Action Buttons (Edit mode only - adapts nicely to desktop mouse pointer hover and iPad taps) */}
-                      {isEditMode && (
-                        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-[2px] opacity-0 hover:opacity-100 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2.5">
-                          <button
-                            onClick={(e) => openEditModal(snippet, e)}
-                            className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg transition-transform hover:scale-110 active:scale-95"
-                            title="Edit"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => handleDelete(snippet.id, e)}
-                            className="p-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl shadow-lg transition-transform hover:scale-110 active:scale-95"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -585,16 +527,16 @@ export default function App() {
           )}
         </main>
 
-        {/* Floating Add Plus Button (always accessible in both Copy & Edit modes!) */}
+        {/* Floating Add Plus Button (always accessible!) */}
         <button
           onClick={openAddModal}
-          className="absolute bottom-20 right-6 md:bottom-24 md:right-8 p-4 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-full shadow-2xl shadow-blue-500/35 transition-all duration-150 z-40 flex items-center justify-center hover:scale-110"
+          className="absolute bottom-20 right-6 md:bottom-24 md:right-8 p-4 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-full shadow-2xl shadow-blue-500/35 transition-all duration-150 z-40 flex items-center justify-center hover:scale-110 hover:rotate-90"
           title="Add New Card"
         >
           <Plus className="w-6 h-6 stroke-[3px]" />
         </button>
 
-        {/* Footer Area with Pinned Action Buttons (adapts width beautifully on tablets and laptops) */}
+        {/* Footer Area with Pinned speed disclaimer (adapts width beautifully on tablets and laptops) */}
         <footer className="py-4 px-5 border-t border-slate-800 bg-slate-950/40 backdrop-blur-md sticky bottom-0 z-20 text-center">
           <p className="text-[11px] text-slate-500 font-medium">
             Designed for instantaneous copy speed. Installs locally as a standalone offline app.
@@ -680,6 +622,20 @@ export default function App() {
                     Save Snippet
                   </button>
                 </div>
+
+                {/* Delete button (only rendered when editing an existing card) */}
+                {editingSnippet && (
+                  <div className="pt-2 border-t border-slate-800/60">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(editingSnippet.id)}
+                      className="w-full py-3 bg-rose-950/20 hover:bg-rose-600 border border-rose-900/50 hover:border-rose-500 text-rose-400 hover:text-white text-sm font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-rose-950/20"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete Snippet</span>
+                    </button>
+                  </div>
+                )}
               </form>
             </div>
           </div>
