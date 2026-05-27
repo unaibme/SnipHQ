@@ -319,19 +319,16 @@ export default function App() {
       <div className="w-full min-h-screen md:min-h-0 md:h-[85vh] lg:h-[90vh] max-w-6xl bg-slate-900 md:rounded-3xl border border-transparent md:border-slate-800/80 flex flex-col justify-between shadow-2xl relative select-none overflow-hidden transition-all duration-300">
         
         {/* Top Header */}
-        <header className="px-5 py-4 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between">
+        <header className="px-4 py-2.5 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
-              <Clipboard className="w-5 h-5 text-white" />
+            <div className="p-1.5 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/20">
+              <Clipboard className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <h1 className="font-bold text-lg tracking-tight">Copier</h1>
-              <p className="text-[10px] text-slate-400 font-medium">Synced Fast Clipboard</p>
-            </div>
+            <h1 className="font-bold text-base tracking-tight">Copier</h1>
           </div>
 
           {/* Sync & Settings status */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button 
               onClick={() => setShowConfigInfo(!showConfigInfo)}
               className="p-1.5 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white"
@@ -353,11 +350,6 @@ export default function App() {
                 <Database className="w-4 h-4 text-slate-500" />
               )}
             </button>
-
-            {/* Instruction Badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950/40 text-[10px] md:text-xs text-slate-400 font-semibold uppercase tracking-wider">
-              Double-click card to edit
-            </div>
           </div>
         </header>
 
@@ -466,12 +458,10 @@ export default function App() {
               {/* Quick Helper Badge */}
               <div className="flex items-center justify-between px-1">
                 <p className="text-xs text-slate-400 font-bold tracking-wider uppercase">
-                  {searchQuery 
-                    ? `SEARCH RESULTS FOR "${searchQuery.toUpperCase()}"` 
-                    : "TAP CARD TO COPY • DOUBLE-TAP TO EDIT"}
+                  {searchQuery ? `SEARCH RESULTS FOR "${searchQuery.toUpperCase()}"` : "SNIPPETS"}
                 </p>
                 <p className="text-xs text-slate-500 font-bold font-mono">
-                  {filteredSnippets.length} of {snippets.length}
+                  {filteredSnippets.length} {filteredSnippets.length === 1 ? 'item' : 'items'}
                 </p>
               </div>
 
